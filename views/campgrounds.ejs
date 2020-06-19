@@ -1,21 +1,11 @@
 <%- include("partials/header") %>
-<div class="container">
-  <nav class="bg-dark navbar navbar-dark navbar-expand-md">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="/">YelpCamp</a>
-      </div>
-
-      <div class="nav-item">
-        <ul class="nav navbar-nav navbar-right">
-          <li class="nav-item"><a class="nav-link" href="/">Login</a></li>
-          <li class="nav-item"><a class="nav-link" href="/">Sign Up</a></li>
-          <li class="nav-item"><a class="nav-link" href="/">Logout</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-</div>
+<style>
+  img {
+    width: 200px; /* You can set the dimensions to whatever you want */
+    height: 200px;
+    object-fit: cover;
+  }
+</style>
 <div class="container">
   <header class="jumbotron">
     <div class="container">
@@ -32,7 +22,7 @@
     <% campgrounds.forEach((camp)=>{%>
     <div class="col-md-3 col-sm-6">
       <div class="img-thumbnail">
-        <img class="img-fluid" src="<%= camp.image %>" />
+        <img src="<%= camp.image %>" />
         <div class="cation">
           <h4><%=camp.name%></h4>
         </div>
