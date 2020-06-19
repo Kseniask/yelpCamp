@@ -14,7 +14,8 @@ app.get('/', (req, res) => {
 //create Schema
 var campSchema = new mongoose.Schema({
   name: String,
-  image: String
+  image: String,
+  description: String
 })
 var Campground = mongoose.model('Campground', campSchema)
 
@@ -22,7 +23,9 @@ var Campground = mongoose.model('Campground', campSchema)
 //   {
 //     name: 'Salmon Creek',
 //     image:
-//       'https://hipcamp-res.cloudinary.com/images/c_fill,f_auto,g_auto,h_504,q_60,w_770/v1445485302/campground-photos/cznqogta0xm6pynikxeo/salmon-creek-ranch-redwood-camp-bay-area-tent-people-lodging.jpg'
+//       'https://hipcamp-res.cloudinary.com/images/c_fill,f_auto,g_auto,h_504,q_60,w_770/v1445485302/campground-photos/cznqogta0xm6pynikxeo/salmon-creek-ranch-redwood-camp-bay-area-tent-people-lodging.jpg',
+//     description:
+//       'You can fish and yeat the gret soup with fresh salmon right there'
 //   },
 //   (err, camp) => {
 //     if (err) {
@@ -83,9 +86,11 @@ app.get('/campgrounds/new', (req, res) => {
 app.post('/campgrounds', (req, res) => {
   var name = req.body.name
   var image = req.body.image
+  var desc = req.body.description
   var newCamp = {
     name: name,
-    image: image
+    image: image,
+    description: desc
   }
   //create a new campground
   Campground.create(newCamp, (err, camp) => {
@@ -98,6 +103,18 @@ app.post('/campgrounds', (req, res) => {
   })
 })
 
+app.get('/campgrounds/:id', (req, res) => {
+  //find campground with  provided id
+  Campground.findById(req.params.id, (err, fcamp) => {
+    if (err) {
+      console.log(err)
+    } else {
+      res.render('show', { campground: fcamp })
+    }
+  })
+  // req.params.id
+  // res.render('show')
+})
 app.listen(3300, () => {
   console.log('YelpCamp server started')
 })
