@@ -1,12 +1,45 @@
 <%- include("partials/header") %>
+<div class="container">
+  <nav class="bg-dark navbar navbar-dark navbar-expand-md">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="/">YelpCamp</a>
+      </div>
 
-<h1>This is the campgrounds page</h1>
-<a href="/campgrounds/new"> Add new campground!</a>
-<% campgrounds.forEach((camp)=>{%>
-<div>
-  <h4>
-    <%= camp.name %>
-  </h4>
-  <img src="<%= camp.image %>" />
+      <div class="nav-item">
+        <ul class="nav navbar-nav navbar-right">
+          <li class="nav-item"><a class="nav-link" href="/">Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="/">Sign Up</a></li>
+          <li class="nav-item"><a class="nav-link" href="/">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 </div>
-<%}) %> <%- include("partials/footer") %>
+<div class="container">
+  <header class="jumbotron">
+    <div class="container">
+      <h1>Welcome to YelpCamp</h1>
+      <p>View our campgrounds all over the world</p>
+      <p>
+        <a class="btn btn-secondary" href="/campgrounds/new">
+          Add new campground!</a
+        >
+      </p>
+    </div>
+  </header>
+  <div class="row text-center" style="display: flex; flex-wrap: wrap;">
+    <% campgrounds.forEach((camp)=>{%>
+    <div class="col-md-3 col-sm-6">
+      <div class="img-thumbnail">
+        <img class="img-fluid" src="<%= camp.image %>" />
+        <div class="cation">
+          <h4><%=camp.name%></h4>
+        </div>
+      </div>
+    </div>
+
+    <%}) %>
+  </div>
+</div>
+<%- include("partials/footer") %>
