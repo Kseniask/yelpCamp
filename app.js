@@ -1,23 +1,21 @@
 var express = require('express'),
   app = express(),
   bodyParse = require('body-parser'),
-  mongoose = require('mongoose')
+  mongoose = require('mongoose'),
+  Campground = require('./models/campground'),
+  Comment = require('./models/comment'),
+  SeedDB = require('./seeds')
 mongoose.connect('mongodb://localhost/yelp-camp', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
+
+SeedDB()
 app.use(bodyParse.urlencoded({ extended: true }))
 app.set('view engine', 'ejs')
 app.get('/', (req, res) => {
   res.render('landing')
 })
-//create Schema
-var campSchema = new mongoose.Schema({
-  name: String,
-  image: String,
-  description: String
-})
-var Campground = mongoose.model('Campground', campSchema)
 
 // Campground.create(
 //   {
@@ -64,6 +62,7 @@ var Campground = mongoose.model('Campground', campSchema)
 //   }
 // ]
 //camps page
+
 app.get('/campgrounds', (req, res) => {
   //get app camps from DB
   Campground.find({}, (err, camp) => {
@@ -102,16 +101,19 @@ app.post('/campgrounds', (req, res) => {
     }
   })
 })
+//show
 
 app.get('/campgrounds/:id', (req, res) => {
   //find campground with  provided id
-  Campground.findById(req.params.id, (err, fcamp) => {
-    if (err) {
-      console.log(err)
-    } else {
-      res.render('show', { campground: fcamp })
-    }
-  })
+  Campground.findById(req.params.id)
+    .populate('comments')
+    .exec((err, fcamp) => {
+      if (err) {
+        console.log(err)
+      } else {
+        res.render('show', { campground: fcamp })
+      }
+    })
   // req.params.id
   // res.render('show')
 })
