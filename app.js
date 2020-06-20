@@ -69,7 +69,7 @@ app.get('/campgrounds', (req, res) => {
     if (err) {
       console.log(err)
     } else {
-      res.render('campgrounds', { campgrounds: camp })
+      res.render('campgrounds/index', { campgrounds: camp })
     }
   })
 
@@ -78,7 +78,7 @@ app.get('/campgrounds', (req, res) => {
 
 //add camp page
 app.get('/campgrounds/new', (req, res) => {
-  res.render('form')
+  res.render('campgrounds/new')
 })
 
 //create camp
@@ -111,11 +111,43 @@ app.get('/campgrounds/:id', (req, res) => {
       if (err) {
         console.log(err)
       } else {
-        res.render('show', { campground: fcamp })
+        res.render('campgrounds/show', { campground: fcamp })
       }
     })
   // req.params.id
   // res.render('show')
+})
+
+//=========
+//COMMENT ROUTES
+//=========
+
+app.get('/campgrounds/:id/comments/new', (req, res) => {
+  Campground.findById(req.params.id, (err, camp) => {
+    if (err) {
+      console.log(err)
+    } else {
+      res.render('comments/new', { campground: camp })
+    }
+  })
+})
+
+app.post('/campgrounds/:id/comments', (req, res) => {
+  Campground.findById(req.params.id, (err, camp) => {
+    if (err) {
+      res.redirect('/campgrounds')
+    } else {
+      Comment.create(req.body.comment, (err, com) => {
+        if (err) {
+          console.log(err)
+        } else {
+          camp.comments.push(com)
+          camp.save()
+          res.redirect('/campgrounds/' + camp._id)
+        }
+      })
+    }
+  })
 })
 app.listen(3300, () => {
   console.log('YelpCamp server started')
