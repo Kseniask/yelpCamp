@@ -13,60 +13,10 @@ mongoose.connect('mongodb://localhost/yelp-camp', {
   useUnifiedTopology: true
 })
 
-SeedDB()
 app.use(bodyParse.urlencoded({ extended: true }))
 app.use(express.static(__dirname + '/public'))
-
+// SeedDB() seed DB
 app.set('view engine', 'ejs')
-
-app.get('/', (req, res) => {
-  res.render('landing')
-})
-
-// Campground.create(
-//   {
-//     name: 'Salmon Creek',
-//     image:
-//       'https://hipcamp-res.cloudinary.com/images/c_fill,f_auto,g_auto,h_504,q_60,w_770/v1445485302/campground-photos/cznqogta0xm6pynikxeo/salmon-creek-ranch-redwood-camp-bay-area-tent-people-lodging.jpg',
-//     description:
-//       'You can fish and yeat the gret soup with fresh salmon right there'
-//   },
-//   (err, camp) => {
-//     if (err) {
-//       console.log(err)
-//     } else {
-//       console.log('Newly created camp: ' + camp)
-//     }
-//   }
-// )
-
-// var campgrounds = [
-//   {
-//     name: 'Granite Hill',
-//     image:
-//       'https://swoop-patagonia.imgix.net/SWO_4_TOM_ALL_Paine_Grande_Campsite_HEADER_.JPG?auto=format,enhance,compress&fit=crop&w=1200&h=0&q=30'
-//   },
-//   {
-//     name: "Mountain Goat's Residence",
-//     image:
-//       'https://landwithoutlimits.com/resources/uploads/2019/10/CCCTMA-Images-Camping-CCC-Brad-Kasselman-v2-2048x1152.jpg'
-//   },
-//   {
-//     name: 'Salmon Creek',
-//     image:
-//       'https://hipcamp-res.cloudinary.com/images/c_fill,f_auto,g_auto,h_504,q_60,w_770/v1445485302/campground-photos/cznqogta0xm6pynikxeo/salmon-creek-ranch-redwood-camp-bay-area-tent-people-lodging.jpg'
-//   },
-//   {
-//     name: 'Granite Hill',
-//     image:
-//       'https://swoop-patagonia.imgix.net/SWO_4_TOM_ALL_Paine_Grande_Campsite_HEADER_.JPG?auto=format,enhance,compress&fit=crop&w=1200&h=0&q=30'
-//   },
-//   {
-//     name: "Mountain Goat's Residence",
-//     image:
-//       'https://landwithoutlimits.com/resources/uploads/2019/10/CCCTMA-Images-Camping-CCC-Brad-Kasselman-v2-2048x1152.jpg'
-//   }
-// ]
 
 //PASSPORT CONFIG
 app.use(
@@ -82,10 +32,15 @@ app.use(passport.session())
 passport.use(new LocalStrategy(User.authenticate()))
 passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
+//res.locals should be after passport initialization
 app.use(function (req, res, next) {
   res.locals.currentUser = req.user
   console.log(req.user)
   next()
+})
+
+app.get('/', (req, res) => {
+  res.render('landing')
 })
 //camps page
 
@@ -171,6 +126,13 @@ app.post('/campgrounds/:id/comments', isLoggedIn, (req, res) => {
         if (err) {
           console.log(err)
         } else {
+          //add username and id to comment
+          com.author.id = req.user._id
+          com.author.username = req.user.username
+
+          //save comment
+          com.save()
+
           camp.comments.push(com)
           camp.save()
           res.redirect('/campgrounds/' + camp._id)
@@ -236,3 +198,50 @@ function isLoggedIn (req, res, next) {
 app.listen(3300, () => {
   console.log('YelpCamp server started')
 })
+
+//add manually
+
+// Campground.create(
+//   {
+//     name: 'Salmon Creek',
+//     image:
+//       'https://hipcamp-res.cloudinary.com/images/c_fill,f_auto,g_auto,h_504,q_60,w_770/v1445485302/campground-photos/cznqogta0xm6pynikxeo/salmon-creek-ranch-redwood-camp-bay-area-tent-people-lodging.jpg',
+//     description:
+//       'You can fish and yeat the gret soup with fresh salmon right there'
+//   },
+//   (err, camp) => {
+//     if (err) {
+//       console.log(err)
+//     } else {
+//       console.log('Newly created camp: ' + camp)
+//     }
+//   }
+// )
+
+// var campgrounds = [
+//   {
+//     name: 'Granite Hill',
+//     image:
+//       'https://swoop-patagonia.imgix.net/SWO_4_TOM_ALL_Paine_Grande_Campsite_HEADER_.JPG?auto=format,enhance,compress&fit=crop&w=1200&h=0&q=30'
+//   },
+//   {
+//     name: "Mountain Goat's Residence",
+//     image:
+//       'https://landwithoutlimits.com/resources/uploads/2019/10/CCCTMA-Images-Camping-CCC-Brad-Kasselman-v2-2048x1152.jpg'
+//   },
+//   {
+//     name: 'Salmon Creek',
+//     image:
+//       'https://hipcamp-res.cloudinary.com/images/c_fill,f_auto,g_auto,h_504,q_60,w_770/v1445485302/campground-photos/cznqogta0xm6pynikxeo/salmon-creek-ranch-redwood-camp-bay-area-tent-people-lodging.jpg'
+//   },
+//   {
+//     name: 'Granite Hill',
+//     image:
+//       'https://swoop-patagonia.imgix.net/SWO_4_TOM_ALL_Paine_Grande_Campsite_HEADER_.JPG?auto=format,enhance,compress&fit=crop&w=1200&h=0&q=30'
+//   },
+//   {
+//     name: "Mountain Goat's Residence",
+//     image:
+//       'https://landwithoutlimits.com/resources/uploads/2019/10/CCCTMA-Images-Camping-CCC-Brad-Kasselman-v2-2048x1152.jpg'
+//   }
+// ]
