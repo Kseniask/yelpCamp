@@ -2,8 +2,11 @@ var express = require('express'),
   app = express(),
   bodyParse = require('body-parser'),
   mongoose = require('mongoose'),
+  passport = require('passport'),
+  LocalStrategy = require('passport-local'),
   Campground = require('./models/campground'),
   Comment = require('./models/comment'),
+  User = require('./models/user'),
   SeedDB = require('./seeds')
 mongoose.connect('mongodb://localhost/yelp-camp', {
   useNewUrlParser: true,
@@ -12,7 +15,10 @@ mongoose.connect('mongodb://localhost/yelp-camp', {
 
 SeedDB()
 app.use(bodyParse.urlencoded({ extended: true }))
+app.use(express.static(__dirname + '/public'))
+
 app.set('view engine', 'ejs')
+
 app.get('/', (req, res) => {
   res.render('landing')
 })
@@ -61,6 +67,26 @@ app.get('/', (req, res) => {
 //       'https://landwithoutlimits.com/resources/uploads/2019/10/CCCTMA-Images-Camping-CCC-Brad-Kasselman-v2-2048x1152.jpg'
 //   }
 // ]
+
+//PASSPORT CONFIG
+app.use(
+  require('express-session')({
+    secret: 'Rusty is cute',
+    resave: false,
+    saveUninitialized: false
+  })
+)
+
+app.use(passport.initialize())
+app.use(passport.session())
+passport.use(new LocalStrategy(User.authenticate()))
+passport.serializeUser(User.serializeUser())
+passport.deserializeUser(User.deserializeUser())
+app.use(function (req, res, next) {
+  res.locals.currentUser = req.user
+  console.log(req.user)
+  next()
+})
 //camps page
 
 app.get('/campgrounds', (req, res) => {
@@ -69,7 +95,10 @@ app.get('/campgrounds', (req, res) => {
     if (err) {
       console.log(err)
     } else {
-      res.render('campgrounds/index', { campgrounds: camp })
+      res.render('campgrounds/index', {
+        campgrounds: camp,
+        currentUser: req.user
+      })
     }
   })
 
@@ -104,6 +133,7 @@ app.post('/campgrounds', (req, res) => {
 //show
 
 app.get('/campgrounds/:id', (req, res) => {
+  // req.user - all info about current user
   //find campground with  provided id
   Campground.findById(req.params.id)
     .populate('comments')
@@ -121,8 +151,8 @@ app.get('/campgrounds/:id', (req, res) => {
 //=========
 //COMMENT ROUTES
 //=========
-
-app.get('/campgrounds/:id/comments/new', (req, res) => {
+//is logged in is a middleware toc heck if logged in
+app.get('/campgrounds/:id/comments/new', isLoggedIn, (req, res) => {
   Campground.findById(req.params.id, (err, camp) => {
     if (err) {
       console.log(err)
@@ -132,7 +162,7 @@ app.get('/campgrounds/:id/comments/new', (req, res) => {
   })
 })
 
-app.post('/campgrounds/:id/comments', (req, res) => {
+app.post('/campgrounds/:id/comments', isLoggedIn, (req, res) => {
   Campground.findById(req.params.id, (err, camp) => {
     if (err) {
       res.redirect('/campgrounds')
@@ -149,6 +179,60 @@ app.post('/campgrounds/:id/comments', (req, res) => {
     }
   })
 })
+//======
+//AUTH ROUTES
+//======
+
+app.get('/register', (req, res) => {
+  res.render('register')
+})
+app.post('/register', (req, res) => {
+  User.register(
+    new User({ username: req.body.username }),
+    req.body.password,
+    (err, user) => {
+      if (err) {
+        console.log(err)
+        return res.render('register')
+      }
+      passport.authenticate('local')(req, res, function () {
+        res.redirect('/campgrounds')
+      })
+    }
+  )
+})
+//====
+//LOGIN
+//====
+
+//show login page
+app.get('/login', (req, res) => {
+  res.render('login')
+})
+
+//hande login logic
+app.post(
+  '/login',
+  passport.authenticate('local', {
+    successRedirect: '/campgrounds',
+    failureRedirect: '/login'
+  }),
+  (req, res) => {}
+)
+
+//logout
+
+app.get('/logout', (req, res) => {
+  req.logout()
+  res.redirect('/campgrounds')
+})
+
+function isLoggedIn (req, res, next) {
+  if (req.isAuthenticated()) {
+    return next()
+  }
+  res.redirect('/login')
+}
 app.listen(3300, () => {
   console.log('YelpCamp server started')
 })

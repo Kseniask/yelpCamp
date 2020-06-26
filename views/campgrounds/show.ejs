@@ -1,12 +1,45 @@
 <%- include("../partials/header") %>
 <div class="container">
-<h1>This is a show template</h1>
-<h3><%= campground.name %></h2>
-<img src="<%= campground.image%>" />
-<p><%= campground.description %></p>
-<p><a class= "btn btn-success"href="/campgrounds/<%=campground._id%>/comments/new">Add New Comment</a></p>
-<% campground.comments.forEach((comm)=>{ %>
-<p><strong><%=comm.author%></strong> - <%= comm.text%> </p>
-<%})%>
+  <div class="row">
+    <div class="col-md-3">
+      <p class="lead">Yelp Camp</p>
+      <div class="list-group">
+        <li class="list-group-item active">Info 1</li>
+        <li class="list-group-item">Info 2</li>
+        <li class="list-group-item">Info 3</li>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="img-thumbnail">
+        <img class="img-fluid" src="<%= campground.image%>" />
+        <div class="caption">
+          <h4 class="float-right">$9.00/night</h4>
+          <h4><a><%= campground.name %></a></h4>
+          <p><%= campground.description %></p>
+        </div>
+      </div>
+
+      <div class="card card-body bg-light">
+        <div class="text-right">
+          <a
+            class="btn btn-success"
+            href="/campgrounds/<%=campground._id%>/comments/new"
+            >Add New Comment</a
+          >
+        </div>
+        <hr />
+        <% campground.comments.forEach((comm)=>{ %>
+        <div class="row">
+          <div class="col-md-12">
+            <strong><%=comm.author%></strong>
+            <span class="float-right">10 days ago</span>
+            <p><%= comm.text%></p>
+          </div>
+        </div>
+
+        <%})%>
+      </div>
+    </div>
+  </div>
 </div>
 <%- include("../partials/footer") %>
