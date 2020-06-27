@@ -5,6 +5,7 @@ var express = require('express'),
   passport = require('passport'),
   LocalStrategy = require('passport-local'),
   Campground = require('./models/campground'),
+  methodOverride = require('method-override'),
   Comment = require('./models/comment'),
   User = require('./models/user'),
   SeedDB = require('./seeds')
@@ -35,14 +36,17 @@ passport.deserializeUser(User.deserializeUser())
 //res.locals should be after passport initialization
 app.use(function (req, res, next) {
   res.locals.currentUser = req.user
-  console.log(req.user)
+  // console.log(req.user)
   next()
 })
-
+app.use(methodOverride('_method'))
 app.get('/', (req, res) => {
   res.render('landing')
 })
-//camps page
+
+//=========
+//COMMENT ROUTES
+//=========
 
 app.get('/campgrounds', (req, res) => {
   //get app camps from DB
@@ -61,7 +65,7 @@ app.get('/campgrounds', (req, res) => {
 })
 
 //add camp page
-app.get('/campgrounds/new', (req, res) => {
+app.get('/campgrounds/new', isLoggedIn, (req, res) => {
   res.render('campgrounds/new')
 })
 
@@ -70,11 +74,17 @@ app.post('/campgrounds', (req, res) => {
   var name = req.body.name
   var image = req.body.image
   var desc = req.body.description
+  var author = {
+    id: req.user._id,
+    username: req.user.username
+  }
   var newCamp = {
     name: name,
     image: image,
-    description: desc
+    description: desc,
+    author: author
   }
+
   //create a new campground
   Campground.create(newCamp, (err, camp) => {
     if (err) {
@@ -102,10 +112,35 @@ app.get('/campgrounds/:id', (req, res) => {
   // req.params.id
   // res.render('show')
 })
-
+//Edit camps
+app.get('/campgrounds/:id/edit', (req, res) => {
+  Campground.findById(req.params.id, (err, fcamp) => {
+    if (err) {
+      res.redirect('/campgrounds')
+    }
+    res.render('campgrounds/edit', { campground: fcamp })
+  })
+})
+//Update camps
+app.put('/campgrounds/:id', function (req, res) {
+  //find the camp
+  var data = {
+    name: req.body.name,
+    image: req.body.image,
+    description: req.body.description
+  }
+  Campground.findByIdAndUpdate(req.params.id, data, (err, fcamp) => {
+    if (err) {
+      res.redirect('/campgrounds')
+    } else {
+      res.redirect('/campgrounds/' + req.params.id)
+    }
+  })
+})
 //=========
 //COMMENT ROUTES
 //=========
+
 //is logged in is a middleware toc heck if logged in
 app.get('/campgrounds/:id/comments/new', isLoggedIn, (req, res) => {
   Campground.findById(req.params.id, (err, camp) => {
