@@ -113,11 +113,8 @@ app.get('/campgrounds/:id', (req, res) => {
   // res.render('show')
 })
 //Edit camps
-app.get('/campgrounds/:id/edit', (req, res) => {
+app.get('/campgrounds/:id/edit', checkOwnership, (req, res) => {
   Campground.findById(req.params.id, (err, fcamp) => {
-    if (err) {
-      res.redirect('/campgrounds')
-    }
     res.render('campgrounds/edit', { campground: fcamp })
   })
 })
@@ -137,6 +134,28 @@ app.put('/campgrounds/:id', function (req, res) {
     }
   })
 })
+
+//Destroy
+
+app.delete('/campgrounds/:id', checkOwnership, (req, res) => {
+  //check if logged in(same as isLoggedin)
+  // if (req.isAuthenticated()) {
+  //   //does the user own a camp?
+  Campground.findByIdAndRemove(req.params.id, (err, campground) => {
+    //     if (err) {
+    //       res.send('YOU ARE NOT ALLOWED TO DO SO')
+    //     } else {
+    //       //baceuse ===, == will not work _id is string, id - mongoose obj
+    //       if (campground.author.id.equals(req.user._id))
+    //         res.redirect('/campgrounds')
+    //     }
+    //   })
+    // } else {
+    //   res.redirect()
+    res.redirect('/campgrounds')
+  })
+})
+
 //=========
 //COMMENT ROUTES
 //=========
@@ -224,11 +243,30 @@ app.get('/logout', (req, res) => {
   res.redirect('/campgrounds')
 })
 
+//middleware
+
 function isLoggedIn (req, res, next) {
   if (req.isAuthenticated()) {
     return next()
   }
   res.redirect('/login')
+}
+
+function checkOwnership (req, res, next) {
+  if (req.isAuthenticated()) {
+    Campground.findById(req.params.id, (err, fcamp) => {
+      if (err) {
+        res.redirect('back')
+      }
+      if (fcamp.author.id.equals(req.user._id)) {
+        next()
+      } else {
+        res.redirect('back')
+      }
+    })
+  } else {
+    res.redirect('back')
+  }
 }
 app.listen(3300, () => {
   console.log('YelpCamp server started')
