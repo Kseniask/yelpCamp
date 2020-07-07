@@ -50,6 +50,21 @@
             <strong><%=comm.author.username%></strong>
             <span class="float-right">10 days ago</span>
             <p><%= comm.text%></p>
+            <%if(currentUser && comm.author.id.equals(currentUser._id)){%>
+            <a
+              class="btn btn-sm btn-warning"
+              href="/campgrounds/<%=campground._id%>/comments/<%=comm._id%>/edit"
+            >
+              Edit
+            </a>
+            <form
+              id="deleteForm"
+              action="/campgrounds/<%= campground._id%>/comments/<%= comm._id%>?_method=DELETE"
+              method="post"
+            >
+              <button class="btn btn-sm btn-danger">Delete</button>
+            </form>
+            <%}%>
           </div>
         </div>
 

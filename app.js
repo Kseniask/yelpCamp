@@ -5,10 +5,11 @@ var express = require('express'),
   passport = require('passport'),
   LocalStrategy = require('passport-local'),
   Campground = require('./models/campground'),
+  flash = require('connect-flash'),
   methodOverride = require('method-override'),
   Comment = require('./models/comment'),
-  User = require('./models/user'),
-  SeedDB = require('./seeds')
+  User = require('./models/user')
+// SeedDB = require('./seeds')
 mongoose.connect('mongodb://localhost/yelp-camp', {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -27,7 +28,7 @@ app.use(
     saveUninitialized: false
   })
 )
-
+app.use(flash())
 app.use(passport.initialize())
 app.use(passport.session())
 passport.use(new LocalStrategy(User.authenticate()))
@@ -195,6 +196,56 @@ app.post('/campgrounds/:id/comments', isLoggedIn, (req, res) => {
     }
   })
 })
+
+app.get(
+  '/campgrounds/:id/comments/:comment_id/edit',
+  checkCommentOwnership,
+  (req, res) => {
+    Comment.findById(req.params.comment_id, (err, foundComm) => {
+      if (err) {
+        res.redirect('back')
+      } else {
+        res.render('comments/edit', {
+          campground_id: req.params.id,
+          comment: foundComm
+        })
+      }
+    })
+  }
+)
+
+app.put('/campgrounds/:id/comments/:comment_id', (req, res) => {
+  Comment.findByIdAndUpdate(
+    req.params.comment_id,
+    req.body.comment,
+    (err, updateComm) => {
+      if (err) {
+        res.redirect('back')
+      } else {
+        res.redirect('/campgrounds/' + req.params.id)
+      }
+    }
+  )
+})
+
+//comments destroy route
+app.delete(
+  '/campgrounds/:id/comments/:comment_id',
+  checkCommentOwnership,
+  (req, res) => {
+    Comment.findByIdAndRemove(
+      req.params.comment_id,
+      { useFindAndModify: false },
+      err => {
+        if (err) {
+          res.redirect('back')
+        } else {
+          res.redirect('/campgrounds/' + req.params.id)
+        }
+      }
+    )
+  }
+)
 //======
 //AUTH ROUTES
 //======
@@ -268,6 +319,23 @@ function checkOwnership (req, res, next) {
     res.redirect('back')
   }
 }
+function checkCommentOwnership (req, res, next) {
+  if (req.isAuthenticated()) {
+    Comment.findById(req.params.comment_id, (err, fcomm) => {
+      if (err) {
+        res.redirect('back')
+      }
+      if (fcomm.author.id.equals(req.user._id)) {
+        next()
+      } else {
+        res.redirect('back')
+      }
+    })
+  } else {
+    res.redirect('back')
+  }
+}
+
 app.listen(3300, () => {
   console.log('YelpCamp server started')
 })
