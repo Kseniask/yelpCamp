@@ -78,6 +78,7 @@ app.get('/campgrounds/new', isLoggedIn, (req, res) => {
 app.post('/campgrounds', (req, res) => {
   var name = req.body.name
   var image = req.body.image
+  var price = req.body.price
   var desc = req.body.description
   var author = {
     id: req.user._id,
@@ -85,6 +86,7 @@ app.post('/campgrounds', (req, res) => {
   }
   var newCamp = {
     name: name,
+    price: price,
     image: image,
     description: desc,
     author: author
@@ -111,6 +113,7 @@ app.get('/campgrounds/:id', (req, res) => {
       if (err) {
         console.log(err)
       } else {
+        console.log(fcamp.price)
         res.render('campgrounds/show', { campground: fcamp })
       }
     })
@@ -131,6 +134,7 @@ app.put('/campgrounds/:id', function (req, res) {
   //find the camp
   var data = {
     name: req.body.name,
+    price: req.body.price,
     image: req.body.image,
     description: req.body.description
   }
@@ -199,8 +203,7 @@ app.post('/campgrounds/:id/comments', isLoggedIn, (req, res) => {
           camp.comments.push(com)
           camp.save()
           req.flash('success', 'Successfully added comment')
-
-          res.redirect('/campgrounds/' + camp._id)
+          res.redirect('/campgrounds/' + req.params.id)
         }
       })
     }
