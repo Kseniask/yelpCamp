@@ -37,6 +37,10 @@ passport.deserializeUser(User.deserializeUser())
 //res.locals should be after passport initialization
 app.use(function (req, res, next) {
   res.locals.currentUser = req.user
+  //flash messages
+  res.locals.error = req.flash('error')
+  res.locals.success = req.flash('success')
+
   // console.log(req.user)
   next()
 })
@@ -46,7 +50,7 @@ app.get('/', (req, res) => {
 })
 
 //=========
-//COMMENT ROUTES
+//CAMP ROUTES
 //=========
 
 app.get('/campgrounds', (req, res) => {
@@ -116,6 +120,9 @@ app.get('/campgrounds/:id', (req, res) => {
 //Edit camps
 app.get('/campgrounds/:id/edit', checkOwnership, (req, res) => {
   Campground.findById(req.params.id, (err, fcamp) => {
+    if (err) {
+      req.flash('error', 'No camp found')
+    }
     res.render('campgrounds/edit', { campground: fcamp })
   })
 })
@@ -179,6 +186,7 @@ app.post('/campgrounds/:id/comments', isLoggedIn, (req, res) => {
     } else {
       Comment.create(req.body.comment, (err, com) => {
         if (err) {
+          req.flash('error', 'Something went wrong')
           console.log(err)
         } else {
           //add username and id to comment
@@ -190,6 +198,8 @@ app.post('/campgrounds/:id/comments', isLoggedIn, (req, res) => {
 
           camp.comments.push(com)
           camp.save()
+          req.flash('success', 'Successfully added comment')
+
           res.redirect('/campgrounds/' + camp._id)
         }
       })
@@ -203,6 +213,7 @@ app.get(
   (req, res) => {
     Comment.findById(req.params.comment_id, (err, foundComm) => {
       if (err) {
+        req.flash('error', 'You need to be logged in to do that')
         res.redirect('back')
       } else {
         res.render('comments/edit', {
@@ -240,6 +251,7 @@ app.delete(
         if (err) {
           res.redirect('back')
         } else {
+          req.flash('success', 'Comment deleted')
           res.redirect('/campgrounds/' + req.params.id)
         }
       }
@@ -253,16 +265,18 @@ app.delete(
 app.get('/register', (req, res) => {
   res.render('register')
 })
+
 app.post('/register', (req, res) => {
   User.register(
     new User({ username: req.body.username }),
     req.body.password,
     (err, user) => {
       if (err) {
-        console.log(err)
+        req.flash('error', err.message)
         return res.render('register')
       }
       passport.authenticate('local')(req, res, function () {
+        req.flash('success', 'Welcome to YelpCamp, ' + user.username)
         res.redirect('/campgrounds')
       })
     }
@@ -291,6 +305,7 @@ app.post(
 
 app.get('/logout', (req, res) => {
   req.logout()
+  req.flash('success', 'Logged you out!')
   res.redirect('/campgrounds')
 })
 
@@ -300,6 +315,7 @@ function isLoggedIn (req, res, next) {
   if (req.isAuthenticated()) {
     return next()
   }
+  req.flash('error', 'You need to be logged in to do that')
   res.redirect('/login')
 }
 
@@ -316,6 +332,7 @@ function checkOwnership (req, res, next) {
       }
     })
   } else {
+    req.flash('error', 'You need to be logged in to do that')
     res.redirect('back')
   }
 }
@@ -323,11 +340,13 @@ function checkCommentOwnership (req, res, next) {
   if (req.isAuthenticated()) {
     Comment.findById(req.params.comment_id, (err, fcomm) => {
       if (err) {
+        req.flash('error', 'You need to be logged in to do that')
         res.redirect('back')
       }
       if (fcomm.author.id.equals(req.user._id)) {
         next()
       } else {
+        req.flash('error', "You don't have permission to do that")
         res.redirect('back')
       }
     })
