@@ -41,7 +41,7 @@ app.use(function (req, res, next) {
   res.locals.error = req.flash('error')
   res.locals.success = req.flash('success')
 
-  // console.log(req.user)
+  console.log('LOCALS: ' + req.user)
   next()
 })
 app.use(methodOverride('_method'))
